@@ -249,3 +249,49 @@ body {
     line-height: 0.98;
   }
 }
+
+/* Reserved Feedback Slot Height to prevent Layout Shifts */
+.submit-feedback-slot {
+  min-height: 102px;
+}
+
+@media (min-width: 768px) {
+  .submit-feedback-slot {
+    min-height: 54px;
+  }
+}
+
+.clear-form-link {
+  background: transparent;
+  border: none;
+  color: #7A746D;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  opacity: 0.65;
+  cursor: pointer;
+  padding: 4px 0;
+  transition: all 0.2s ease;
+}
+
+.clear-form-link:hover {
+  color: #141414;
+  opacity: 1;
+  text-decoration: underline;
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus,
+select:-webkit-autofill,
+select:-webkit-autofill:hover,
+select:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0px 1000px #FBF8F3 inset !important;
+  -webkit-text-fill-color: #141414 !important;
+  caret-color: #141414 !important;
+  border-color: rgba(20,20,20,0.12) !important;
+  transition: background-color 9999s ease-in-out 0s;
+}

@@ -22,11 +22,12 @@ export default function Home() {
         <AppointmentForm />
       </Suspense>
 
-      {/* Contact & Map Location Section */}
-      <ContactSection />
 
       {/* Instagram Inspiration Gallery */}
       <InstagramGallery />
+
+      {/* Contact & Map Location Section */}
+      <ContactSection />
     </>
   );
 }

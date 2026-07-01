@@ -157,11 +157,6 @@ export default function ContactSection() {
                 </div>
               </div>
 
-              {/* Map Footer Info */}
-              <div className="pt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs font-sans text-[#5C5752] space-y-2 sm:space-y-0">
-                <span>Valet parking available at entrance</span>
-                <span className="text-[#C7A56A] font-medium">Prior booking recommended for weekends</span>
-              </div>
 
             </div>
           </div>

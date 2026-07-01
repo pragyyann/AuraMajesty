@@ -1,16 +1,23 @@
 'use strict';
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
+import Image from 'next/image';
+
+const instagramPosts = [
+  { title: "Hair Artistry", image: "/instagram/hair.jpg" },
+  { title: "Nail Styling", image: "/instagram/nail.jpg" },
+  { title: "Skin Rituals", image: "/instagram/skin.jpg" },
+  { title: "Bridal Glam", image: "/instagram/bridal.jpg" },
+  { title: "Offers", image: "/instagram/offer.jpg" },
+];
 
 export default function InstagramGallery() {
-  const galleryItems = [
-    { id: 1, tag: "Hair Artistry", bgClass: "from-accent-silver/20 to-surface-soft" },
-    { id: 2, tag: "Nail Styling", bgClass: "from-surface-soft to-accent-slate/15" },
-    { id: 3, tag: "Skin Rituals", bgClass: "from-accent-slate/15 to-accent-silver/15" },
-    { id: 4, tag: "Bridal Glam", bgClass: "from-accent-silver/20 to-accent-slate/10" },
-    { id: 5, tag: "Grooming Studio", bgClass: "from-surface-soft to-accent-silver/10" },
-  ];
+  const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
+
+  const handleImageError = (src: string) => {
+    setFailedImages((prev) => new Set(prev).add(src));
+  };
 
   return (
     <section className="py-20 bg-[#EEE7DD] border-t border-black/8">
@@ -54,37 +61,54 @@ export default function InstagramGallery() {
 
         {/* Gallery Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-          {galleryItems.map((item) => (
+          {instagramPosts.map((item) => (
             <a
-              key={item.id}
+              key={item.title}
               href="https://instagram.com/auramajestystudio"
               target="_blank"
               rel="noopener noreferrer"
-              className="group block aspect-square bg-surface-white border border-border-custom p-2 shadow-sm relative overflow-hidden transition-all duration-300 hover:border-text-primary"
+              className="group block relative h-[220px] sm:h-[260px] overflow-hidden rounded-xl"
             >
-              {/* Image Canvas with Gradients */}
-              <div className={`w-full h-full bg-gradient-to-tr ${item.bgClass} flex items-center justify-center relative overflow-hidden`}>
-                {/* Subtle Grid Overlay */}
-                <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(0,0,0,0.01)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,0,0,0.01)_1px,transparent_1px)] bg-[size:15px_15px]" />
-                
-                {/* Instagram Icon Hover Overlay */}
-                <div className="absolute inset-0 bg-dark-section/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center z-10">
-                  <svg
-                    className="w-8 h-8 text-surface-white scale-75 group-hover:scale-100 transition-transform duration-300 fill-none stroke-current"
-                    viewBox="0 0 24 24"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
-                    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
-                    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
-                  </svg>
+              {/* Image */}
+              {!failedImages.has(item.image) ? (
+                <Image
+                  src={item.image}
+                  alt={item.title}
+                  fill
+                  sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
+                  className="object-cover transition-transform duration-500 ease-out group-hover:scale-110"
+                  onError={() => handleImageError(item.image)}
+                />
+              ) : (
+                /* Fallback placeholder if image fails */
+                <div className="absolute inset-0 bg-gradient-to-br from-[#F5F1EA] to-[#E8E0D4] flex items-center justify-center">
+                  <span className="font-serif-display text-sm italic text-[#9A928A]/60">{item.title}</span>
                 </div>
+              )}
 
-                <span className="font-serif-display text-xs italic text-accent-slate/60 group-hover:text-surface-white/0 transition-colors z-0">
-                  {item.tag}
+              {/* Dark gradient overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent opacity-70 group-hover:opacity-90 transition-opacity duration-300" />
+
+              {/* Title text */}
+              <div className="absolute inset-0 flex items-end p-4">
+                <span className="font-sans text-xs font-bold text-white uppercase tracking-widest drop-shadow-sm">
+                  {item.title}
                 </span>
+              </div>
+
+              {/* Instagram icon on hover */}
+              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <svg
+                  className="w-8 h-8 text-white/90 scale-75 group-hover:scale-100 transition-transform duration-300 fill-none stroke-current"
+                  viewBox="0 0 24 24"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+                  <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+                  <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+                </svg>
               </div>
             </a>
           ))}

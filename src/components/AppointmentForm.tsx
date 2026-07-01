@@ -18,9 +18,29 @@ export default function AppointmentForm() {
     notes: '',
   });
 
-  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [submitSuccess, setSubmitSuccess] = useState('');
+  const [submitError, setSubmitError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
+  const [lastSubmittedAppointment, setLastSubmittedAppointment] = useState<any>(null);
+
+
+  // Helper to preserve scroll position under all conditions
+  const restoreScrollPosition = (x: number, y: number) => {
+    requestAnimationFrame(() => {
+      window.scrollTo(x, y);
+      requestAnimationFrame(() => {
+        window.scrollTo(x, y);
+      });
+    });
+
+    setTimeout(() => {
+      window.scrollTo(x, y);
+    }, 0);
+
+    setTimeout(() => {
+      window.scrollTo(x, y);
+    }, 50);
+  };
 
   useEffect(() => {
     const serviceParam = searchParams.get('service');
@@ -56,26 +76,30 @@ export default function AppointmentForm() {
 
   const handleSelectGenderGroup = (group: 'Ladies' | 'Gents' | 'Unisex') => {
     setFormData((prev) => ({ ...prev, genderGroup: group, service: '' }));
-    setErrorMsg('');
+    setSubmitError('');
+    setSubmitSuccess('');
   };
 
   const getWhatsAppLink = () => {
-    let text = "Hi Aura Majesty Studio, I want to book an appointment.\n";
-    if (formData.genderGroup) {
-      text += `Service for: ${formData.genderGroup === 'Unisex' ? 'Unisex / Popular' : formData.genderGroup}\n`;
+    const hasFilledFields = formData.fullName.trim() || formData.phoneNumber.trim() || formData.genderGroup || formData.service || formData.preferredDate || formData.preferredTime;
+
+    if (!hasFilledFields) {
+      return "https://wa.me/919355522667?text=Hi%20Aura%20Majesty%20Studio%2C%20I%20want%20to%20book%20an%20appointment.";
     }
-    if (formData.service) {
-      const match = servicesData.find(s => s.name === formData.service);
-      const displayServiceName = match ? `${match.category} — ${match.name}` : formData.service;
-      text += `Service: ${displayServiceName}\n`;
-    }
-    if (formData.preferredDate) {
-      text += `Preferred date: ${formatDisplayDate(formData.preferredDate)}\n`;
-    }
-    if (formData.preferredTime) {
-      text += `Preferred time: ${formData.preferredTime}\n`;
-    }
-    return `https://wa.me/919355522667?text=${encodeURIComponent(text)}`;
+
+    const match = servicesData.find(s => s.name === formData.service);
+
+    let text = "Hi Aura Majesty Studio, I want to book an appointment.\n\n";
+    if (formData.fullName.trim()) text += `Name: ${formData.fullName.trim()}\n`;
+    if (formData.phoneNumber.trim()) text += `Phone: ${formData.phoneNumber.trim()}\n`;
+    if (formData.genderGroup) text += `Service For: ${formData.genderGroup === 'Unisex' ? 'Unisex / Popular' : formData.genderGroup}\n`;
+    if (formData.service) text += `Service: ${match ? match.name : formData.service}\n`;
+    if (match?.duration) text += `Duration: ${match.duration}\n`;
+    if (formData.preferredDate) text += `Date: ${formatDisplayDate(formData.preferredDate)}\n`;
+    if (formData.preferredTime) text += `Time: ${formData.preferredTime}\n`;
+    if (formData.notes.trim()) text += `Notes: ${formData.notes.trim()}\n`;
+
+    return `https://wa.me/919355522667?text=${encodeURIComponent(text.trim())}`;
   };
 
   const timeSlots = {
@@ -123,42 +147,64 @@ export default function AppointmentForm() {
 
   const handleSelectDate = (dateString: string) => {
     setFormData((prev) => ({ ...prev, preferredDate: dateString }));
-    setErrorMsg('');
+    setSubmitError('');
+    setSubmitSuccess('');
   };
 
   const handleSelectTime = (time: string) => {
     setFormData((prev) => ({ ...prev, preferredTime: time }));
-    setErrorMsg('');
+    setSubmitError('');
+    setSubmitSuccess('');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation();
+
+    const scrollXBefore = window.scrollX;
+    const scrollYBefore = window.scrollY;
+    console.log("Submit scroll before:", scrollYBefore);
+
+    setIsSubmitting(true);
+    setSubmitError("");
+    setSubmitSuccess("");
+
     if (!formData.fullName.trim()) {
-      setErrorMsg('Please enter your full name.');
+      setSubmitError('Please enter your full name.');
+      restoreScrollPosition(scrollXBefore, scrollYBefore);
+      setIsSubmitting(false);
       return;
     }
     if (!formData.phoneNumber.trim()) {
-      setErrorMsg('Please enter your phone number.');
+      setSubmitError('Please enter your phone number.');
+      restoreScrollPosition(scrollXBefore, scrollYBefore);
+      setIsSubmitting(false);
       return;
     }
     if (!formData.genderGroup) {
-      setErrorMsg('Please select who the service is for.');
+      setSubmitError('Please select who the service is for.');
+      restoreScrollPosition(scrollXBefore, scrollYBefore);
+      setIsSubmitting(false);
       return;
     }
     if (!formData.service) {
-      setErrorMsg('Please select a service.');
+      setSubmitError('Please select a service.');
+      restoreScrollPosition(scrollXBefore, scrollYBefore);
+      setIsSubmitting(false);
       return;
     }
     if (!formData.preferredDate) {
-      setErrorMsg('Please select your preferred date.');
+      setSubmitError('Please select your preferred date.');
+      restoreScrollPosition(scrollXBefore, scrollYBefore);
+      setIsSubmitting(false);
       return;
     }
     if (!formData.preferredTime) {
-      setErrorMsg('Please select your preferred time slot.');
+      setSubmitError('Please select your preferred time slot.');
+      restoreScrollPosition(scrollXBefore, scrollYBefore);
+      setIsSubmitting(false);
       return;
     }
-    setErrorMsg('');
-    setIsSubmitting(true);
 
     // Resolve service metadata from servicesData
     const match = servicesData.find(
@@ -190,19 +236,28 @@ export default function AppointmentForm() {
       const result = await response.json();
 
       if (!response.ok || !result.success) {
-        setErrorMsg(result.message || "Failed to confirm appointment. Please try again.");
-      } else {
-        setIsSubmitted(true);
+        throw new Error(result.message || "Failed to submit appointment.");
       }
+
+      setSubmitSuccess("Your appointment request has been received. Aura Majesty Studio will confirm your booking shortly.");
+      setLastSubmittedAppointment(payload);
+      console.log("Submit scroll after success before restore:", window.scrollY);
+      restoreScrollPosition(scrollXBefore, scrollYBefore);
     } catch (err) {
       console.error("Submission error:", err);
-      setErrorMsg("Network error. Please check your connection and try again.");
+      setSubmitError(err instanceof Error ? err.message : "Something went wrong. Please try again or contact us on WhatsApp.");
+      restoreScrollPosition(scrollXBefore, scrollYBefore);
     } finally {
       setIsSubmitting(false);
+      console.log("Submit scroll after finally:", window.scrollY);
+      restoreScrollPosition(scrollXBefore, scrollYBefore);
     }
   };
 
   const handleReset = () => {
+    const scrollXBefore = window.scrollX;
+    const scrollYBefore = window.scrollY;
+
     setFormData({
       fullName: '',
       phoneNumber: '',
@@ -212,8 +267,12 @@ export default function AppointmentForm() {
       preferredTime: '',
       notes: '',
     });
-    setErrorMsg('');
-    setIsSubmitted(false);
+    setSubmitSuccess('');
+    setSubmitError('');
+    setLastSubmittedAppointment(null);
+
+
+    restoreScrollPosition(scrollXBefore, scrollYBefore);
   };
 
   // Helper to format stored YYYY-MM-DD date to friendly string for receipt
@@ -229,6 +288,15 @@ export default function AppointmentForm() {
       return dateStr;
     }
   };
+
+  // Helper to build WhatsApp confirm link for last submitted appointment
+  const buildWhatsAppUrl = (payload: any) => {
+    if (!payload) return "";
+    const displayDate = formatDisplayDate(payload.preferredDate);
+    const message = `Hi Aura Majesty Studio, I want to confirm my appointment request.\n\nName: ${payload.fullName}\nPhone: ${payload.phone}\nService For: ${payload.serviceFor === 'Unisex' ? 'Unisex / Popular' : payload.serviceFor}\nService: ${payload.serviceName}\nDuration: ${payload.duration || ""}\nDate: ${displayDate}\nTime: ${payload.preferredTime}\nNotes: ${payload.notes || "None"}`;
+    return `https://wa.me/919355522667?text=${encodeURIComponent(message)}`;
+  };
+
 
   return (
     <section id="book-appointment" className="py-24 bg-[#EEE7DD] border-b border-black/8 scroll-mt-12">
@@ -250,18 +318,9 @@ export default function AppointmentForm() {
         {/* Form Container */}
         <div className="bg-[#FBF8F3] border border-black/8 p-6 sm:p-10 shadow-[0_18px_45px_rgba(20,20,20,0.04)] relative overflow-hidden rounded-2xl">
           
-          {!isSubmitted ? (
-            <form onSubmit={handleSubmit} className="space-y-6">
-              
-              {/* Error Alert Banner */}
-              {errorMsg && (
-                <div className="flex items-center space-x-2 bg-red-50 border border-red-200 text-red-700 p-4 text-xs font-sans font-semibold tracking-wide uppercase transition-all duration-300">
-                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                  <span>{errorMsg}</span>
-                </div>
-              )}
+            <form onSubmit={handleSubmit} className="space-y-6" noValidate>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className={`grid grid-cols-1 md:grid-cols-2 gap-6 transition-opacity duration-300 ${submitSuccess ? 'opacity-60 pointer-events-none' : ''}`}>
                 {/* Full Name */}
                 <div className="space-y-2">
                   <label htmlFor="fullName" className="block font-sans text-xs font-semibold uppercase tracking-wider text-[#141414]">
@@ -272,10 +331,11 @@ export default function AppointmentForm() {
                     id="fullName"
                     name="fullName"
                     required
+                    readOnly={!!submitSuccess}
                     value={formData.fullName}
                     onChange={handleChange}
                     placeholder="Enter your full name"
-                    className="w-full bg-[#F5F1EA] border border-black/8 px-4 py-3 text-[#141414] font-sans text-sm focus:outline-none focus:border-[#C7A56A] placeholder:text-[#5C5752]/50 transition-colors"
+                    className={`w-full bg-[#FBF8F3] border border-black/[0.12] px-4 py-3 text-[#141414] font-sans text-sm focus:outline-none focus:border-[#C7A56A] focus:bg-white focus:ring-[3px] focus:ring-[#C7A56A]/16 placeholder:text-[#9A928A] transition-all duration-200 ${submitSuccess ? 'cursor-default' : ''}`}
                   />
                 </div>
 
@@ -289,10 +349,11 @@ export default function AppointmentForm() {
                     id="phoneNumber"
                     name="phoneNumber"
                     required
+                    readOnly={!!submitSuccess}
                     value={formData.phoneNumber}
                     onChange={handleChange}
                     placeholder="Enter your mobile number"
-                    className="w-full bg-[#F5F1EA] border border-black/8 px-4 py-3 text-[#141414] font-sans text-sm focus:outline-none focus:border-[#C7A56A] placeholder:text-[#5C5752]/50 transition-colors"
+                    className={`w-full bg-[#FBF8F3] border border-black/[0.12] px-4 py-3 text-[#141414] font-sans text-sm focus:outline-none focus:border-[#C7A56A] focus:bg-white focus:ring-[3px] focus:ring-[#C7A56A]/16 placeholder:text-[#9A928A] transition-all duration-200 ${submitSuccess ? 'cursor-default' : ''}`}
                   />
                 </div>
 
@@ -308,8 +369,9 @@ export default function AppointmentForm() {
                         <button
                           key={group}
                           type="button"
-                          onClick={() => handleSelectGenderGroup(group)}
-                          className={`py-3 px-4 text-center font-sans text-xs font-semibold uppercase tracking-widest border transition-all duration-200 cursor-pointer ${
+                          onClick={() => !submitSuccess && handleSelectGenderGroup(group)}
+                          disabled={!!submitSuccess}
+                          className={`py-3 px-4 text-center font-sans text-xs font-semibold uppercase tracking-widest border transition-all duration-200 ${submitSuccess ? 'cursor-default' : 'cursor-pointer'} ${
                             isSelected
                               ? 'bg-[#141414] text-white border-[#141414]'
                               : 'bg-[#F5F1EA] text-[#141414] border-black/8 hover:bg-[#EFE7DD]'
@@ -331,10 +393,10 @@ export default function AppointmentForm() {
                     id="service"
                     name="service"
                     required
-                    disabled={!formData.genderGroup}
+                    disabled={!formData.genderGroup || !!submitSuccess}
                     value={formData.service}
                     onChange={handleChange}
-                    className="w-full bg-[#F5F1EA] border border-black/8 px-4 py-3 text-[#141414] font-sans text-sm focus:outline-none focus:border-[#C7A56A] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className={`w-full bg-[#FBF8F3] border border-black/[0.12] px-4 py-3 text-[#141414] font-sans text-sm focus:outline-none focus:border-[#C7A56A] focus:bg-white focus:ring-[3px] focus:ring-[#C7A56A]/16 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 ${submitSuccess ? 'cursor-default' : ''}`}
                   >
                     {!formData.genderGroup ? (
                       <option value="">-- Please select "Service For" first --</option>
@@ -381,9 +443,10 @@ export default function AppointmentForm() {
                           <button
                             key={dateObj.dateString}
                             type="button"
-                            onClick={() => handleSelectDate(dateObj.dateString)}
+                            onClick={() => !submitSuccess && handleSelectDate(dateObj.dateString)}
+                            disabled={!!submitSuccess}
                             aria-pressed={isSelected}
-                            className={`flex-shrink-0 w-20 py-4 flex flex-col items-center justify-between border transition-all duration-200 relative focus:outline-none focus:ring-2 focus:ring-[#C7A56A] cursor-pointer ${
+                            className={`flex-shrink-0 w-20 py-4 flex flex-col items-center justify-between border transition-all duration-200 relative focus:outline-none focus:ring-2 focus:ring-[#C7A56A] ${submitSuccess ? 'cursor-default' : 'cursor-pointer'} ${
                               isSelected
                                 ? 'bg-[#141414] border-[#141414] text-white shadow-md transform -translate-y-0.5'
                                 : 'bg-[#FBF8F3] border-black/8 text-[#141414] hover:border-[#C7A56A] hover:bg-[#EEE7DD]'
@@ -436,9 +499,10 @@ export default function AppointmentForm() {
                                 <button
                                   key={time}
                                   type="button"
-                                  onClick={() => handleSelectTime(time)}
+                                  onClick={() => !submitSuccess && handleSelectTime(time)}
+                                  disabled={!!submitSuccess}
                                   aria-pressed={isSelected}
-                                  className={`py-2.5 px-3 font-sans text-xs font-medium tracking-wide transition-all duration-200 border text-center focus:outline-none focus:ring-2 focus:ring-[#C7A56A] cursor-pointer ${
+                                  className={`py-2.5 px-3 font-sans text-xs font-medium tracking-wide transition-all duration-200 border text-center focus:outline-none focus:ring-2 focus:ring-[#C7A56A] ${submitSuccess ? 'cursor-default' : 'cursor-pointer'} ${
                                     isSelected
                                       ? 'bg-[#141414] border-[#141414] text-white shadow-sm'
                                       : 'bg-[#FBF8F3] border-black/8 text-[#141414] hover:bg-[#EEE7DD]'
@@ -458,7 +522,7 @@ export default function AppointmentForm() {
               </div>
 
               {/* Message / Notes */}
-              <div className="space-y-2">
+              <div className={`space-y-2 transition-opacity duration-300 ${submitSuccess ? 'opacity-60 pointer-events-none' : ''}`}>
                 <label htmlFor="notes" className="block font-sans text-xs font-semibold uppercase tracking-wider text-[#141414]">
                   Special Instructions / Notes
                 </label>
@@ -466,83 +530,102 @@ export default function AppointmentForm() {
                   id="notes"
                   name="notes"
                   rows={3}
+                  readOnly={!!submitSuccess}
                   value={formData.notes}
                   onChange={handleChange}
                   placeholder="Any specific stylist preferences or hair/skin concerns..."
-                  className="w-full bg-[#F5F1EA] border border-black/8 px-4 py-3 text-[#141414] font-sans text-sm focus:outline-none focus:border-[#C7A56A] placeholder:text-[#5C5752]/50 resize-none transition-colors"
+                  className={`w-full bg-[#FBF8F3] border border-black/[0.12] px-4 py-3 text-[#141414] font-sans text-sm focus:outline-none focus:border-[#C7A56A] focus:bg-white focus:ring-[3px] focus:ring-[#C7A56A]/16 placeholder:text-[#9A928A] resize-none transition-all duration-200 ${submitSuccess ? 'cursor-default' : ''}`}
                 />
               </div>
 
-              {/* Submit Buttons */}
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-4 border-t border-black/8">
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="flex-grow bg-[#141414] hover:bg-[#C7A56A] text-white font-sans text-xs font-bold uppercase tracking-widest py-4 px-8 transition-colors duration-300 text-center cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isSubmitting ? 'Confirming...' : 'Confirm Appointment'}
-                </button>
-                <a
-                  href={getWhatsAppLink()}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center space-x-2 border border-black/16 hover:border-[#25D366] hover:text-[#25D366] text-[#141414] hover:bg-[#25D366]/5 font-sans text-xs font-bold uppercase tracking-widest py-4 px-8 transition-all duration-300 text-center"
-                >
-                  <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.746.953 3.71 1.458 5.704 1.459h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-                  </svg>
-                  <span>WhatsApp Booking</span>
-                </a>
+              {/* Submit Buttons - hidden after successful submission */}
+              {!submitSuccess && (
+                <div className="space-y-4 pt-4 border-t border-black/8">
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+                    <button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="flex-grow bg-[#141414] hover:bg-[#C7A56A] text-white font-sans text-xs font-bold uppercase tracking-widest px-8 transition-colors duration-300 text-center cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center h-[54px]"
+                    >
+                      {isSubmitting ? 'Confirming...' : 'Confirm Appointment'}
+                    </button>
+                    <a
+                      href={getWhatsAppLink()}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-grow bg-[#FBF8F3] hover:bg-[#F5F1EA] border border-black/12 text-[#141414] hover:text-[#25D366] hover:border-[#25D366] font-sans text-xs font-bold uppercase tracking-widest px-8 transition-all duration-300 text-center h-[54px] flex items-center justify-center space-x-2 cursor-pointer"
+                    >
+                      <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.746.953 3.71 1.458 5.704 1.459h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                      </svg>
+                      <span>WhatsApp Booking</span>
+                    </a>
+                  </div>
+                  
+                  {/* Subtle Clear form link */}
+                  <div className="flex justify-center sm:justify-start">
+                    <button
+                      type="button"
+                      onClick={handleReset}
+                      className="clear-form-link"
+                    >
+                      Clear form
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Submit Feedback Slot with Layout Stabilization */}
+              <div className="submit-feedback-slot w-full mt-6 flex items-center justify-center">
+                {submitSuccess && (
+                  <div className="w-full animate-[fadeIn_0.3s_ease-out] space-y-3">
+                    <div 
+                      className="flex items-center space-x-2 border rounded-[12px] px-3.5 py-3 text-sm font-sans"
+                      style={{
+                        background: 'rgba(236, 253, 245, 0.7)',
+                        borderColor: 'rgba(34, 197, 94, 0.22)',
+                        color: '#166534'
+                      }}
+                    >
+                      <Check className="w-4 h-4 flex-shrink-0 text-[#22c55e]" />
+                      <span className="font-sans font-medium">Appointment request received. We&apos;ll confirm your booking shortly.</span>
+                    </div>
+
+                    {/* Post-success actions: Confirm on WhatsApp + Book Another */}
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                      {lastSubmittedAppointment && (
+                        <a
+                          href={buildWhatsAppUrl(lastSubmittedAppointment)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex-grow bg-[#FBF8F3] hover:bg-[#F5F1EA] border border-black/12 text-[#141414] hover:text-[#25D366] hover:border-[#25D366] font-sans text-xs font-bold uppercase tracking-widest px-6 transition-all duration-300 text-center h-[48px] flex items-center justify-center space-x-2 cursor-pointer rounded-[10px]"
+                        >
+                          <svg className="w-4 h-4 fill-current text-[#25D366]" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.746.953 3.71 1.458 5.704 1.459h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                          </svg>
+                          <span>Confirm on WhatsApp</span>
+                        </a>
+                      )}
+                      <button
+                        type="button"
+                        onClick={handleReset}
+                        className="flex-grow bg-[#FBF8F3] hover:bg-[#F5F1EA] border border-black/12 text-[#141414] font-sans text-xs font-bold uppercase tracking-widest px-6 transition-all duration-300 text-center h-[48px] flex items-center justify-center cursor-pointer rounded-[10px]"
+                      >
+                        Book Another Appointment
+                      </button>
+                    </div>
+                  </div>
+                )}
+                {submitError && (
+                  <div className="w-full animate-[fadeIn_0.3s_ease-out]">
+                    <div className="flex items-center space-x-2 bg-red-50 border border-red-200 text-red-700 rounded-[12px] px-3.5 py-3 text-xs font-sans font-semibold tracking-wide uppercase">
+                      <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                      <span>{submitError}</span>
+                    </div>
+                  </div>
+                )}
               </div>
             </form>
-          ) : (
-            /* Success State */
-            <div className="py-8 px-4 text-center space-y-6 animate-[fadeIn_0.5s_ease-out]">
-              <div className="w-16 h-16 bg-[#141414]/10 text-[#C7A56A] rounded-full flex items-center justify-center mx-auto">
-                <Check className="w-8 h-8" />
-              </div>
-              <div className="space-y-2">
-                <h3 className="font-serif-display text-2xl font-medium text-[#141414]">
-                  Request Received
-                </h3>
-                <p className="font-sans text-sm text-[#5C5752] max-w-md mx-auto">
-                  Your appointment request has been received. Aura Majesty Studio will confirm your booking shortly.
-                </p>
-              </div>
-
-              {/* Receipt Summary */}
-              <div className="bg-[#F5F1EA] border border-black/8 p-6 max-w-md mx-auto text-left space-y-3 font-sans text-sm">
-                <div className="flex justify-between border-b border-black/8 pb-2">
-                  <span className="text-[#5C5752]">Name</span>
-                  <span className="font-medium text-[#141414]">{formData.fullName}</span>
-                </div>
-                <div className="flex justify-between border-b border-black/8 pb-2">
-                  <span className="text-[#5C5752]">Service For</span>
-                  <span className="font-medium text-[#141414]">{formData.genderGroup === 'Unisex' ? 'Unisex / Popular' : formData.genderGroup}</span>
-                </div>
-                <div className="flex justify-between border-b border-black/8 pb-2">
-                  <span className="text-[#5C5752]">Service</span>
-                  <span className="font-medium text-[#141414]">{formData.service}</span>
-                </div>
-                <div className="flex justify-between border-b border-black/8 pb-2">
-                  <span className="text-[#5C5752]">Date</span>
-                  <span className="font-medium text-[#141414]">{formatDisplayDate(formData.preferredDate)}</span>
-                </div>
-                <div className="flex justify-between pb-1">
-                  <span className="text-[#5C5752]">Time Slot</span>
-                  <span className="font-medium text-[#141414]">{formData.preferredTime}</span>
-                </div>
-              </div>
-
-              <button
-                onClick={handleReset}
-                className="inline-flex items-center space-x-2 border border-black/16 hover:border-[#141414] text-[#141414] font-sans text-xs font-bold py-3 px-6 tracking-wider uppercase transition-colors cursor-pointer"
-              >
-                <span>Book Another Session</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          )}
 
         </div>
       </div>

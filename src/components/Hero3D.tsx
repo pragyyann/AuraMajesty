@@ -105,6 +105,7 @@ export default function Hero3D() {
                 alt="Aura Majesty Salon Storefront"
                 fill
                 priority
+                sizes="(max-width: 768px) 100vw, 50vw"
                 className={`object-cover object-[65%_center] z-0 transition-opacity duration-1000 ease-in-out ${
                   activeIndex === 0 ? 'opacity-100' : 'opacity-0'
                 }`}
@@ -115,6 +116,7 @@ export default function Hero3D() {
                 src="/hero-alt.png"
                 alt="Aura Majesty Salon Interior"
                 fill
+                sizes="(max-width: 768px) 100vw, 50vw"
                 className={`object-cover object-center z-0 transition-opacity duration-1000 ease-in-out ${
                   activeIndex === 1 ? 'opacity-100' : 'opacity-0'
                 }`}
