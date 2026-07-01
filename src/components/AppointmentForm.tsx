@@ -19,6 +19,7 @@ export default function AppointmentForm() {
   });
 
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
@@ -130,8 +131,16 @@ export default function AppointmentForm() {
     setErrorMsg('');
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.fullName.trim()) {
+      setErrorMsg('Please enter your full name.');
+      return;
+    }
+    if (!formData.phoneNumber.trim()) {
+      setErrorMsg('Please enter your phone number.');
+      return;
+    }
     if (!formData.genderGroup) {
       setErrorMsg('Please select who the service is for.');
       return;
@@ -149,8 +158,48 @@ export default function AppointmentForm() {
       return;
     }
     setErrorMsg('');
-    console.log("Appointment Form Submitted:", formData);
-    setIsSubmitted(true);
+    setIsSubmitting(true);
+
+    // Resolve service metadata from servicesData
+    const match = servicesData.find(
+      (s) => s.name.toLowerCase() === formData.service.toLowerCase() && s.genderGroup === formData.genderGroup
+    );
+
+    const payload = {
+      fullName: formData.fullName.trim(),
+      phone: formData.phoneNumber.trim(),
+      serviceFor: formData.genderGroup,
+      serviceCategory: match ? match.category : "Popular Services",
+      serviceName: match ? match.name : formData.service,
+      duration: match ? match.duration : "",
+      preferredDate: formData.preferredDate,
+      preferredTime: formData.preferredTime,
+      notes: formData.notes.trim(),
+      source: "Website"
+    };
+
+    try {
+      const response = await fetch("/api/appointments", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        setErrorMsg(result.message || "Failed to confirm appointment. Please try again.");
+      } else {
+        setIsSubmitted(true);
+      }
+    } catch (err) {
+      console.error("Submission error:", err);
+      setErrorMsg("Network error. Please check your connection and try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleReset = () => {
@@ -428,9 +477,10 @@ export default function AppointmentForm() {
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-4 border-t border-black/8">
                 <button
                   type="submit"
-                  className="flex-grow bg-[#141414] hover:bg-[#C7A56A] text-white font-sans text-xs font-bold uppercase tracking-widest py-4 px-8 transition-colors duration-300 text-center cursor-pointer"
+                  disabled={isSubmitting}
+                  className="flex-grow bg-[#141414] hover:bg-[#C7A56A] text-white font-sans text-xs font-bold uppercase tracking-widest py-4 px-8 transition-colors duration-300 text-center cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Confirm Appointment
+                  {isSubmitting ? 'Confirming...' : 'Confirm Appointment'}
                 </button>
                 <a
                   href={getWhatsAppLink()}
