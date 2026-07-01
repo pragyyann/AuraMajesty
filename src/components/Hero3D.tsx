@@ -4,7 +4,7 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowRight, Phone, MessageSquare, MapPin } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 
 export default function Hero3D() {
   const [activeIndex, setActiveIndex] = React.useState(0);
@@ -28,7 +28,7 @@ export default function Hero3D() {
 
     const interval = setInterval(() => {
       setActiveIndex((prev) => (prev === 0 ? 1 : 0));
-    }, 5500);
+    }, 4500);
 
     return () => clearInterval(interval);
   }, [prefersReducedMotion]);
@@ -76,8 +76,8 @@ export default function Hero3D() {
         <div className="hero-content-container flex flex-col items-start space-y-6 md:space-y-8 text-left animate-fade-up motion-reduce:animate-none">
           
           {/* Eyebrow Label & Status */}
-          <div className="space-y-3 w-full">
-            <span className="font-sans text-[10px] font-bold text-[#D8B878] uppercase tracking-[0.2em] block bg-white/5 border border-white/10 px-3.5 py-1.5 w-fit rounded-full backdrop-blur-sm">
+          <div className="space-y-3 w-full md:mb-2">
+            <span className="font-sans text-[10px] font-bold text-[#D8B878] uppercase tracking-[0.2em] block bg-white/5 border border-white/10 md:bg-black/[0.42] md:border-white/14 px-3.5 py-1.5 w-fit rounded-full backdrop-blur-sm md:backdrop-blur-[8px]">
               AURA MAJESTY STUDIO · INDIRAPURAM
             </span>
           </div>
@@ -94,27 +94,54 @@ export default function Hero3D() {
 
             {/* Cinematic Image Card */}
             <div 
-              className="w-full relative h-[210px] rounded-[18px] overflow-hidden border border-white/14 bg-[#050505]"
+              className="w-full relative h-[260px] rounded-[22px] overflow-hidden border border-white/14 bg-[#050505]"
               style={{
-                boxShadow: "0 22px 60px rgba(0,0,0,0.48)"
+                boxShadow: "0 28px 80px rgba(0,0,0,0.55)"
               }}
             >
+              {/* Storefront Image */}
+              <Image
+                src="/hero-bg.png"
+                alt="Aura Majesty Salon Storefront"
+                fill
+                priority
+                className={`object-cover object-[65%_center] z-0 transition-opacity duration-1000 ease-in-out ${
+                  activeIndex === 0 ? 'opacity-100' : 'opacity-0'
+                }`}
+              />
+
+              {/* Interior Image */}
               <Image
                 src="/hero-alt.png"
                 alt="Aura Majesty Salon Interior"
                 fill
-                priority
-                className="object-cover object-center z-0"
+                className={`object-cover object-center z-0 transition-opacity duration-1000 ease-in-out ${
+                  activeIndex === 1 ? 'opacity-100' : 'opacity-0'
+                }`}
               />
 
               {/* Combined Vertical/Horizontal Vignette Overlay with Inner Shadow */}
               <div 
                 className="absolute inset-0 pointer-events-none z-10"
                 style={{
-                  background: "linear-gradient(180deg, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.22) 42%, rgba(0,0,0,0.62) 100%), linear-gradient(90deg, rgba(0,0,0,0.36) 0%, rgba(0,0,0,0.04) 45%, rgba(0,0,0,0.28) 100%)",
+                  background: "linear-gradient(180deg, rgba(0,0,0,0.04) 0%, rgba(0,0,0,0.16) 45%, rgba(0,0,0,0.54) 100%), linear-gradient(90deg, rgba(0,0,0,0.28) 0%, rgba(0,0,0,0.02) 45%, rgba(0,0,0,0.22) 100%)",
                   boxShadow: "inset 0 0 80px rgba(0,0,0,0.55)"
                 }}
               />
+
+              {/* Tiny Refined 2-Dot Indicator (Bottom-Right Inside Image) */}
+              <div className="absolute bottom-3.5 right-4 z-20 flex items-center space-x-1.5 bg-black/40 backdrop-blur-[4px] px-2.5 py-1.5 rounded-full border border-white/8">
+                <span 
+                  className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
+                    activeIndex === 0 ? 'bg-[#D8B878] scale-110' : 'bg-white/35'
+                  }`}
+                />
+                <span 
+                  className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
+                    activeIndex === 1 ? 'bg-[#D8B878] scale-110' : 'bg-white/35'
+                  }`}
+                />
+              </div>
             </div>
           </div>
 
@@ -150,32 +177,6 @@ export default function Hero3D() {
               <span>Explore Services</span>
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
             </Link>
-          </div>
-
-          {/* Subtle Glass Contact Chips (one line on desktop, stacks on mobile) */}
-          <div className="pt-8 border-t border-white/18 flex flex-col md:flex-row md:flex-nowrap items-stretch md:items-center gap-3 w-full">
-            <a
-              href="tel:+919355522667"
-              className="inline-flex items-center justify-center md:justify-start gap-2 whitespace-nowrap bg-white/6 border border-white/14 hover:bg-white/10 hover:border-white/25 md:bg-black/35 md:border-white/16 md:hover:border-white/30 md:hover:bg-black/50 px-4 py-2.5 rounded-full text-xs font-semibold font-sans text-white/82 md:text-white/85 transition-all duration-300 w-full md:w-auto"
-            >
-              <Phone className="w-3.5 h-3.5 text-[#D8B878] shrink-0" />
-              <span>+91 935-552-2667</span>
-            </a>
-            
-            <a
-              href={whatsappUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-center md:justify-start gap-2 whitespace-nowrap bg-white/6 border border-white/14 hover:bg-white/10 hover:border-white/25 md:bg-black/35 md:border-white/16 md:hover:border-white/30 md:hover:bg-black/50 px-4 py-2.5 rounded-full text-xs font-semibold font-sans text-white/82 md:text-white/85 transition-all duration-300 w-full md:w-auto"
-            >
-              <MessageSquare className="w-3.5 h-3.5 text-[#25D366] shrink-0" />
-              <span>WhatsApp Booking</span>
-            </a>
-
-            <div className="inline-flex items-center justify-center md:justify-start gap-2 whitespace-nowrap bg-white/6 border border-white/14 md:bg-black/35 md:border-white/16 px-4 py-2.5 rounded-full text-xs font-semibold font-sans text-white/82 md:text-white/85 w-full md:w-auto">
-              <MapPin className="w-3.5 h-3.5 text-[#D8B878] shrink-0" />
-              <span>Indirapuram, Ghaziabad</span>
-            </div>
           </div>
           
         </div>

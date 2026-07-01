@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import FloatingCTA from "@/components/FloatingCTA";
 
 export const metadata: Metadata = {
   title: "Aura Majesty Studio | Luxury Hair, Beauty & Grooming in Ghaziabad",
@@ -23,7 +22,6 @@ export default function RootLayout({
           {children}
         </main>
         <Footer />
-        <FloatingCTA />
       </body>
     </html>
   );
