@@ -91,14 +91,14 @@ export default function ContactSection() {
             <div className="flex flex-wrap gap-4 pt-4 border-t border-black/8">
               <button
                 onClick={handleScrollToBook}
-                className="bg-[#141414] hover:bg-[#C7A56A] text-white font-sans text-xs font-bold px-6 py-4 tracking-wider uppercase transition-colors duration-300 flex items-center space-x-2 cursor-pointer"
+                className="bg-[#141414] hover:bg-[#C7A56A] text-white font-sans text-xs font-bold px-6 py-4 tracking-wider uppercase transition-all duration-200 hover:-translate-y-[1px] flex items-center space-x-2 cursor-pointer rounded-[14px]"
               >
                 <Calendar className="w-4 h-4" />
                 <span>Book Appointment</span>
               </button>
               <a
                 href="tel:+919355522667"
-                className="border border-black/16 hover:border-[#141414] text-[#141414] hover:bg-[#141414]/5 font-sans text-xs font-bold px-6 py-4 tracking-wider uppercase transition-colors duration-300 flex items-center space-x-2"
+                className="border border-black/16 hover:border-[#141414] text-[#141414] hover:bg-[#141414]/5 font-sans text-xs font-bold px-6 py-4 tracking-wider uppercase transition-all duration-200 hover:-translate-y-[1px] flex items-center space-x-2 rounded-[14px]"
               >
                 <Phone className="w-4 h-4" />
                 <span>Call Now</span>
@@ -107,7 +107,7 @@ export default function ContactSection() {
                 href="https://www.google.com/maps/search/?api=1&query=403%20GroundFloor%2C%20Niti%20Khand%202%2C%20Indirapuram%2C%20Ghaziabad%20201014"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="border border-black/16 hover:border-[#141414] text-[#141414] hover:bg-[#141414]/5 font-sans text-xs font-bold px-6 py-4 tracking-wider uppercase transition-colors duration-300 flex items-center space-x-2"
+                className="border border-black/16 hover:border-[#141414] text-[#141414] hover:bg-[#141414]/5 font-sans text-xs font-bold px-6 py-4 tracking-wider uppercase transition-all duration-200 hover:-translate-y-[1px] flex items-center space-x-2 rounded-[14px]"
               >
                 <Navigation className="w-4 h-4" />
                 <span>Get Directions</span>

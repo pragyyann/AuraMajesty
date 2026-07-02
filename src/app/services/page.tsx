@@ -18,7 +18,8 @@ import {
   Maximize2,
   Search,
   ArrowRight,
-  HelpCircle
+  HelpCircle,
+  X
 } from 'lucide-react';
 
 const getCategoryIcon = (category: string) => {
@@ -48,6 +49,133 @@ const getCategoryIcon = (category: string) => {
   }
 };
 
+interface ServiceDetailsModalProps {
+  categoryName: string;
+  items: ServiceItem[];
+  icon: React.ComponentType<{ className?: string }>;
+  onClose: () => void;
+  onBook: (categoryName: string) => void;
+}
+
+function ServiceDetailsModal({
+  categoryName,
+  items,
+  icon: Icon,
+  onClose,
+  onBook,
+}: ServiceDetailsModalProps) {
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    
+    // Lock background scrolling
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [onClose]);
+
+  const handleOverlayClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) onClose();
+  };
+
+  const desc = categoryDescriptions[categoryName] || "";
+
+  return (
+    <div
+      onClick={handleOverlayClick}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 backdrop-blur-[4px] p-4 animate-[fadeIn_0.2s_ease-out]"
+    >
+      <div className="bg-[#FBF8F3] border border-black/10 rounded-[20px] w-full max-w-[760px] max-h-[80vh] flex flex-col shadow-2xl relative overflow-hidden animate-[zoomIn_0.2s_ease-out]">
+        
+        {/* Header */}
+        <div className="p-6 md:p-8 border-b border-black/8 flex justify-between items-start">
+          <div className="flex items-center space-x-4">
+            <div className="w-12 h-12 bg-[#F5F1EA] border border-black/8 flex items-center justify-center text-[#C7A56A] rounded-xl">
+              <Icon className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="font-serif-display text-xl md:text-2xl font-semibold text-[#141414] leading-snug">
+                {categoryName}
+              </h3>
+              <span className="font-sans text-xs text-[#5C5752] uppercase tracking-wider block mt-0.5">
+                {items.length} services available
+              </span>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-black/5 text-[#5C5752] hover:text-[#141414] rounded-full transition-colors cursor-pointer"
+            aria-label="Close modal"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="p-6 md:p-8 overflow-y-auto flex-grow space-y-5 scrollbar-thin scrollbar-thumb-[#C7A56A]/20 scrollbar-track-transparent">
+          {desc && (
+            <p className="font-sans text-sm text-[#5C5752] leading-relaxed pb-2 border-b border-black/5">
+              {desc}
+            </p>
+          )}
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-4 pt-2">
+            {items.map((item) => (
+              <div
+                key={item.id}
+                className="flex justify-between items-start py-3 border-b border-black/5 group hover:border-[#C7A56A] transition-colors"
+              >
+                <div className="space-y-1 pr-4">
+                  <span className="font-sans text-sm font-medium text-[#141414] group-hover:text-[#C7A56A] transition-colors block">
+                    {item.name}
+                  </span>
+                  <span className="font-sans text-xs text-[#5C5752] block">
+                    {item.duration}
+                  </span>
+                </div>
+                {item.consultationBased && (
+                  <span className="inline-flex items-center space-x-1 font-sans text-[9px] font-bold text-[#C7A56A] border border-[#C7A56A]/30 bg-[#C7A56A]/5 px-2.5 py-1 mt-0.5 flex-shrink-0">
+                    <HelpCircle className="w-2.5 h-2.5" />
+                    <span>Consultation based</span>
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="p-6 md:p-8 border-t border-black/8 bg-[#EFE7DD]/10 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <span className="text-xs font-sans text-[#5C5752] hidden sm:inline">
+            Reserve your session below.
+          </span>
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            <button
+              onClick={onClose}
+              className="flex-1 sm:flex-none border border-black/16 hover:border-[#141414] text-[#141414] font-sans text-xs font-bold uppercase tracking-widest py-3.5 px-6 text-center cursor-pointer transition-colors bg-[#FBF8F3] hover:bg-[#141414]/5 rounded-[14px]"
+            >
+              Close
+            </button>
+            <button
+              onClick={() => onBook(categoryName)}
+              className="flex-1 sm:flex-none bg-[#141414] hover:bg-[#C7A56A] text-white font-sans text-xs font-bold uppercase tracking-widest py-3.5 px-6 shadow-md cursor-pointer transition-colors rounded-[14px]"
+            >
+              Book Category
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
 function ServicesContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -55,7 +183,7 @@ function ServicesContent() {
   const [activeTab, setActiveTab] = useState<'Ladies' | 'Gents' | 'Unisex'>('Ladies');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
+  const [selectedModalCategory, setSelectedModalCategory] = useState<string | null>(null);
 
   // Parse tab from URL parameters
   useEffect(() => {
@@ -72,12 +200,12 @@ function ServicesContent() {
   // Reset category filters and expansion when active tab changes
   useEffect(() => {
     setSelectedCategory(null);
-    setExpandedCategory(null);
+    setSelectedModalCategory(null);
   }, [activeTab]);
 
   // Reset expansion when search query changes
   useEffect(() => {
-    setExpandedCategory(null);
+    setSelectedModalCategory(null);
   }, [searchQuery]);
 
   // Filter services corresponding to current active tab
@@ -104,12 +232,11 @@ function ServicesContent() {
 
   const handleBookCategory = (categoryTitle: string) => {
     console.log("Selected Category for Booking:", categoryTitle);
-    router.push(`/services?category=${encodeURIComponent(categoryTitle)}`);
-  };
-
-  const handleBookAppointment = (categoryTitle: string) => {
-    console.log("Selected Category for Booking Appointment:", categoryTitle);
-    router.push(`/services?category=${encodeURIComponent(categoryTitle)}&book=true`);
+    const serviceItem = servicesData.find(
+      (s) => s.category.toLowerCase() === categoryTitle.toLowerCase()
+    );
+    const serviceFor = serviceItem ? serviceItem.genderGroup : activeTab;
+    router.push(`/?serviceFor=${encodeURIComponent(serviceFor)}&category=${encodeURIComponent(categoryTitle)}#book-appointment`);
   };
 
   const handleTabChange = (tab: 'Ladies' | 'Gents' | 'Unisex') => {
@@ -117,12 +244,13 @@ function ServicesContent() {
     router.push(`/services?tab=${tab.toLowerCase()}`);
   };
 
-  const handleToggleExpand = (categoryName: string) => {
-    if (expandedCategory === categoryName) {
-      setExpandedCategory(null);
-    } else {
-      setExpandedCategory(categoryName);
-    }
+  const handleOpenModal = (categoryName: string) => {
+    setSelectedModalCategory(categoryName);
+  };
+
+  const handleBookCategoryClick = (categoryName: string) => {
+    setSelectedModalCategory(null);
+    handleBookCategory(categoryName);
   };
 
   // Helper to get 3 preview items per category
@@ -144,23 +272,31 @@ function ServicesContent() {
       <ServicesHero />
 
       {/* Main Services Filter & Grid Area */}
-      <section className="py-20 bg-bg-salon min-h-screen">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+      <section className="py-20 bg-[#F5F1EA] text-[#141414] min-h-screen border-b border-black/8 relative">
+        {/* Dark-to-Neutral Transition Band */}
+        <div 
+          className="absolute top-0 left-0 right-0 h-[75px] md:h-[110px] pointer-events-none z-10"
+          style={{
+            background: "linear-gradient(180deg, rgba(5, 5, 5, 0.82) 0%, rgba(5, 5, 5, 0.38) 35%, rgba(245, 241, 234, 0.82) 78%, #F5F1EA 100%)"
+          }}
+        />
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12 relative z-10">
           
           {/* Controls Panel (Tabs, Search, and Filters) */}
           <div className="space-y-6">
             
             {/* Segmented Control Gender Tabs */}
             <div className="flex justify-center">
-              <div className="bg-surface-soft border border-border-custom p-1.5 flex space-x-1 max-w-md w-full shadow-sm">
+              <div className="bg-[#EFE7DD]/40 border border-black/8 p-1.5 flex space-x-1 max-w-md w-full shadow-sm rounded-[14px]">
                 {(['Ladies', 'Gents', 'Unisex'] as const).map((tab) => (
                   <button
                     key={tab}
                     onClick={() => handleTabChange(tab)}
-                    className={`flex-1 py-3 text-center font-sans text-xs font-semibold uppercase tracking-widest transition-all duration-300 ${
+                    className={`flex-1 py-3 text-center font-sans text-xs font-semibold uppercase tracking-widest transition-all duration-200 cursor-pointer rounded-[12px] ${
                       activeTab === tab
-                        ? 'bg-accent-slate text-surface-white'
-                        : 'text-text-muted hover:text-text-primary'
+                        ? 'bg-[#141414] text-white shadow-sm'
+                        : 'text-[#5C5752] hover:text-[#141414]'
                     }`}
                   >
                     {tab === 'Unisex' ? 'Unisex / Popular' : tab}
@@ -170,44 +306,48 @@ function ServicesContent() {
             </div>
 
             {/* Search Bar */}
-            <div className="max-w-3xl mx-auto flex flex-col md:flex-row gap-4 items-stretch md:items-center">
-              <div className="relative flex-grow">
-                <Search className="w-4 h-4 text-text-muted absolute left-4 top-1/2 transform -translate-y-1/2" />
+            <div className="max-w-[760px] md:max-w-[800px] mx-auto w-full mb-8 px-4 sm:px-0">
+              <div className="relative w-full h-[54px] md:h-[58px]">
+                <Search className="w-5 h-5 text-[#8A827A] absolute left-5 top-1/2 transform -translate-y-1/2" />
                 <input
                   type="text"
                   placeholder="Search services..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-11 pr-4 py-3 bg-surface-white border border-border-custom text-text-primary font-sans text-sm focus:outline-none focus:border-accent-slate transition-all placeholder:text-text-muted/50"
+                  className="w-full h-full pl-14 pr-5 bg-[#FBF8F3] border border-black/10 text-[#141414] font-sans text-sm focus:outline-none focus:border-[#C7A56A] focus:ring-[3px] focus:ring-[#C7A56A]/18 transition-all placeholder:text-[#8A827A] rounded-[16px]"
                 />
               </div>
             </div>
 
             {/* Category Filter Pills */}
-            <div className="flex gap-2 overflow-x-auto pb-2 justify-start md:justify-center scrollbar-none max-w-4xl mx-auto -mx-4 px-4 sm:mx-auto sm:px-0">
-              <button
-                onClick={() => setSelectedCategory(null)}
-                className={`flex-shrink-0 px-4 py-2 border font-sans text-xs font-medium uppercase tracking-wider transition-all duration-200 ${
-                  selectedCategory === null
-                    ? 'bg-accent-slate border-accent-slate text-surface-white'
-                    : 'bg-surface-white border-border-custom text-text-primary hover:bg-surface-soft'
-                }`}
-              >
-                All Categories
-              </button>
-              {categoriesList.map((cat) => (
+            <div className="relative max-w-[1100px] mx-auto overflow-visible">
+              <div className="flex gap-3 overflow-x-auto md:flex-wrap md:justify-center pb-4 pt-1 px-5 scrollbar-none scroll-pl-5 -mx-5 md:mx-auto overflow-y-visible">
                 <button
-                  key={cat}
-                  onClick={() => setSelectedCategory(cat)}
-                  className={`flex-shrink-0 px-4 py-2 border font-sans text-xs font-medium uppercase tracking-wider transition-all duration-200 ${
-                    selectedCategory === cat
-                      ? 'bg-accent-slate border-accent-slate text-surface-white'
-                      : 'bg-surface-white border-border-custom text-text-primary hover:bg-surface-soft'
+                  onClick={() => setSelectedCategory(null)}
+                  className={`flex-shrink-0 flex-grow-0 flex-none px-5 py-3 border font-sans text-[13px] font-bold uppercase tracking-widest transition-all duration-200 cursor-pointer rounded-full shadow-[0_8px_24px_rgba(20,20,20,0.04)] hover:-translate-y-[1px] ${
+                    selectedCategory === null
+                      ? 'bg-[#141414] border-[#141414] text-white shadow-[0_14px_34px_rgba(20,20,20,0.18)]'
+                      : 'bg-[#FBF8F3] border-black/10 text-[#34302C] hover:bg-white hover:border-[#C7A56A]/35'
                   }`}
+                  style={{ flex: '0 0 auto' }}
                 >
-                  {cat}
+                  All Categories
                 </button>
-              ))}
+                {categoriesList.map((cat) => (
+                  <button
+                    key={cat}
+                    onClick={() => setSelectedCategory(cat)}
+                    className={`flex-shrink-0 flex-grow-0 flex-none px-5 py-3 border font-sans text-[13px] font-bold uppercase tracking-widest transition-all duration-200 cursor-pointer rounded-full shadow-[0_8px_24px_rgba(20,20,20,0.04)] hover:-translate-y-[1px] ${
+                      selectedCategory === cat
+                        ? 'bg-[#141414] border-[#141414] text-white shadow-[0_14px_34px_rgba(20,20,20,0.18)]'
+                        : 'bg-[#FBF8F3] border-black/10 text-[#34302C] hover:bg-white hover:border-[#C7A56A]/35'
+                    }`}
+                    style={{ flex: '0 0 auto' }}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
             </div>
 
           </div>
@@ -220,34 +360,34 @@ function ServicesContent() {
                   const CategoryIcon = getCategoryIcon(categoryName);
                   const desc = categoryDescriptions[categoryName] || "";
                   const previewItems = getPreviewServices(items);
-                  const isExpanded = expandedCategory === categoryName;
+                  const isModalActive = selectedModalCategory === categoryName;
 
                   return (
                     <div
                       key={categoryName}
-                      className={`bg-surface-white border transition-all duration-300 flex flex-col justify-between h-full ${
-                        isExpanded
-                          ? 'border-accent-slate ring-1 ring-accent-slate/20 shadow-md'
-                          : 'border-border-custom shadow-sm hover:border-text-primary hover:shadow-md'
+                      className={`group bg-[#FBF8F3] border transition-all duration-300 flex flex-col justify-between h-full rounded-xl overflow-hidden ${
+                        isModalActive
+                          ? 'border-[#C7A56A] ring-1 ring-[#C7A56A]/20 shadow-md'
+                          : 'border-black/8 shadow-[0_12px_30px_rgba(20,20,20,0.04)] hover:border-[#C7A56A] hover:shadow-[0_20px_50px_rgba(20,20,20,0.08)]'
                       }`}
                     >
                       {/* Card Header */}
-                      <div className="p-6 border-b border-border-custom/40 bg-surface-soft/10">
+                      <div className="p-6 border-b border-black/8 bg-[#EFE7DD]/10">
                         <div className="flex items-center space-x-4 mb-2">
-                          <div className="w-10 h-10 bg-bg-salon border border-border-custom/50 flex items-center justify-center text-accent-slate">
+                          <div className="w-10 h-10 bg-[#F5F1EA] border border-black/8 flex items-center justify-center text-[#C7A56A] group-hover:bg-[#C7A56A] group-hover:border-[#C7A56A] group-hover:text-white transition-colors duration-300">
                             <CategoryIcon className="w-5 h-5" />
                           </div>
                           <div>
-                            <h3 className="font-serif-display text-lg font-semibold text-text-primary tracking-wide leading-snug">
+                            <h3 className="font-serif-display text-lg font-semibold text-[#141414] tracking-wide leading-snug">
                               {categoryName}
                             </h3>
-                            <span className="font-sans text-[10px] text-text-muted uppercase tracking-wider block">
+                            <span className="font-sans text-[10px] text-[#5C5752] uppercase tracking-wider block">
                               {items.length} services
                             </span>
                           </div>
                         </div>
                         {desc && (
-                          <p className="font-sans text-xs text-text-muted/80 leading-relaxed mt-3 line-clamp-2">
+                          <p className="font-sans text-xs text-[#5C5752]/80 leading-relaxed mt-3 line-clamp-2">
                             {desc}
                           </p>
                         )}
@@ -255,16 +395,16 @@ function ServicesContent() {
 
                       {/* Preview Services List (Exactly 3) */}
                       <div className="p-6 flex-grow">
-                        <span className="block font-sans text-[9px] font-bold uppercase tracking-widest text-text-dim mb-3">
+                        <span className="block font-sans text-[9px] font-bold uppercase tracking-widest text-[#C7A56A]/80 mb-3">
                           Featured Services
                         </span>
                         <ul className="space-y-3">
                           {previewItems.map((item) => (
-                            <li key={item.id} className="flex justify-between items-start text-xs border-b border-border-custom/20 pb-2 last:border-0 last:pb-0">
-                              <span className="font-sans font-medium text-text-primary">
+                            <li key={item.id} className="flex justify-between items-start text-xs border-b border-black/8 pb-2 last:border-0 last:pb-0">
+                              <span className="font-sans font-medium text-[#141414]">
                                 {item.name}
                               </span>
-                              <span className="font-sans text-text-muted flex-shrink-0 ml-4">
+                              <span className="font-sans text-[#5C5752] flex-shrink-0 ml-4">
                                 {item.duration}
                               </span>
                             </li>
@@ -275,19 +415,21 @@ function ServicesContent() {
                       {/* Buttons Panel */}
                       <div className="p-6 pt-0 flex flex-col gap-3">
                         <button
-                          onClick={() => handleToggleExpand(categoryName)}
-                          className={`w-full font-sans text-xs font-bold uppercase tracking-widest py-3 px-4 text-center transition-colors ${
-                            isExpanded
-                              ? 'bg-accent-slate text-surface-white hover:bg-accent-slate/90'
-                              : 'bg-dark-section text-surface-white hover:bg-accent-slate'
+                          type="button"
+                          onClick={() => handleOpenModal(categoryName)}
+                          className={`w-full font-sans text-xs font-bold uppercase tracking-widest py-3 px-4 text-center cursor-pointer transition-colors duration-200 rounded-[14px] ${
+                            isModalActive
+                              ? 'bg-[#C7A56A] text-white shadow-sm'
+                              : 'bg-[#141414] text-white hover:bg-[#C7A56A]'
                           }`}
                         >
-                          {isExpanded ? 'Hide Details' : 'View Services'}
+                          View Services
                         </button>
                         
                         <button
+                          type="button"
                           onClick={() => handleBookCategory(categoryName)}
-                          className="w-full border border-border-custom hover:border-text-primary text-text-primary font-sans text-xs font-bold uppercase tracking-widest py-2.5 px-4 text-center transition-colors bg-surface-white"
+                          className="w-full border border-black/16 hover:border-[#141414] text-[#141414] font-sans text-xs font-bold uppercase tracking-widest py-2.5 px-4 text-center cursor-pointer transition-colors duration-200 bg-[#FBF8F3] hover:bg-[#141414]/5 rounded-[14px]"
                         >
                           Book Category
                         </button>
@@ -297,84 +439,21 @@ function ServicesContent() {
                 })}
               </div>
 
-              {/* Full-Width Expandable Service Details Panel */}
-              {expandedCategory && groupedServices[expandedCategory] && (
-                <div
-                  id="expanded-details-panel"
-                  className="bg-surface-white border border-accent-slate p-6 md:p-10 shadow-lg animate-[fadeIn_0.4s_ease-out] scroll-mt-24"
-                >
-                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-border-custom pb-6 mb-8 gap-4">
-                    <div>
-                      <div className="flex items-center space-x-3 mb-2">
-                        {(() => {
-                          const Icon = getCategoryIcon(expandedCategory);
-                          return <Icon className="w-6 h-6 text-accent-slate" />;
-                        })()}
-                        <h3 className="font-serif-display text-2xl md:text-3xl font-medium text-text-primary">
-                          {expandedCategory}
-                        </h3>
-                      </div>
-                      <p className="font-sans text-sm text-text-muted">
-                        {categoryDescriptions[expandedCategory]}
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => setExpandedCategory(null)}
-                      className="text-xs font-sans font-bold text-text-muted hover:text-text-primary uppercase tracking-widest border border-border-custom hover:border-text-primary px-4 py-2 bg-surface-white transition-colors"
-                    >
-                      Close Panel
-                    </button>
-                  </div>
-
-                  {/* Services List in 2-column layout */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4">
-                    {groupedServices[expandedCategory].map((item) => (
-                      <div
-                        key={item.id}
-                        className="flex justify-between items-start py-3 border-b border-border-custom/30 group hover:border-accent-slate transition-colors"
-                      >
-                        <div className="space-y-1 pr-4">
-                          <span className="font-sans text-sm font-medium text-text-primary group-hover:text-accent-slate transition-colors block">
-                            {item.name}
-                          </span>
-                          <span className="font-sans text-xs text-text-muted block">
-                            {item.duration}
-                          </span>
-                        </div>
-                        {item.consultationBased && (
-                          <span className="inline-flex items-center space-x-1 font-sans text-[9px] font-bold text-accent-silver border border-accent-silver/30 bg-accent-silver/5 px-2.5 py-1 mt-0.5 flex-shrink-0">
-                            <HelpCircle className="w-2.5 h-2.5" />
-                            <span>Consultation based</span>
-                          </span>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Bottom Panel CTA */}
-                  <div className="mt-10 pt-8 border-t border-border-custom flex flex-col sm:flex-row items-center justify-between gap-6">
-                    <div className="text-center sm:text-left">
-                      <span className="block font-sans text-[10px] text-text-muted uppercase tracking-wider mb-1">
-                        Ready to experience {expandedCategory}?
-                      </span>
-                      <p className="font-serif-display text-lg text-text-primary">
-                        Reserve your session and select stylings inside the booking desk.
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => handleBookAppointment(expandedCategory)}
-                      className="w-full sm:w-auto bg-dark-section hover:bg-accent-slate text-surface-white font-sans text-xs font-bold uppercase tracking-widest py-4 px-8 shadow-md transition-colors"
-                    >
-                      Book Appointment
-                    </button>
-                  </div>
-                </div>
+              {/* Modal Overlay Render */}
+              {selectedModalCategory && groupedServices[selectedModalCategory] && (
+                <ServiceDetailsModal
+                  categoryName={selectedModalCategory}
+                  items={groupedServices[selectedModalCategory]}
+                  icon={getCategoryIcon(selectedModalCategory)}
+                  onClose={() => setSelectedModalCategory(null)}
+                  onBook={handleBookCategoryClick}
+                />
               )}
             </div>
           ) : (
             /* Empty State */
-            <div className="text-center py-20 bg-surface-white border border-border-custom p-8 max-w-md mx-auto">
-              <p className="font-sans text-sm text-text-muted">
+            <div className="text-center py-20 bg-[#FBF8F3] border border-black/8 p-8 max-w-md mx-auto rounded-2xl">
+              <p className="font-sans text-sm text-[#5C5752]">
                 No services found matching your criteria. Try resetting filters or search query.
               </p>
               <button
@@ -382,7 +461,7 @@ function ServicesContent() {
                   setSearchQuery('');
                   setSelectedCategory(null);
                 }}
-                className="mt-4 font-sans text-xs font-bold text-accent-slate hover:text-text-primary uppercase tracking-widest underline decoration-2 underline-offset-4"
+                className="mt-4 font-sans text-xs font-bold text-[#C7A56A] hover:text-[#141414] uppercase tracking-widest underline decoration-2 underline-offset-4 cursor-pointer"
               >
                 Clear Search & Filters
               </button>
@@ -400,7 +479,7 @@ function ServicesContent() {
 export default function ServicesPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-bg-salon flex items-center justify-center font-sans text-text-muted">
+      <div className="min-h-screen bg-[#F5F1EA] flex items-center justify-center font-sans text-[#5C5752]">
         Loading services menu...
       </div>
     }>

@@ -167,14 +167,15 @@ export default function Hero3D() {
           <div className="flex flex-col md:flex-row md:items-center gap-4 pt-2 w-full md:w-auto">
             <button
               onClick={handleScrollToBook}
-              className="w-full md:w-auto bg-white hover:bg-white/90 text-[#050505] font-sans text-xs font-bold uppercase tracking-widest py-4.5 px-8 shadow-md hover:-translate-y-0.5 transition-all duration-300 text-center cursor-pointer"
+              className="w-full md:w-auto bg-white hover:bg-[#ECECEC] text-[#050505] font-sans text-xs font-bold uppercase tracking-widest py-4.5 px-8 hover:-translate-y-[1px] transition-all duration-200 text-center cursor-pointer rounded-[16px]"
+              style={{ boxShadow: '0 16px 40px rgba(0,0,0,0.28)' }}
             >
               Book Appointment
             </button>
 
             <Link
               href="/services"
-              className="group w-full md:w-auto border border-white/25 bg-transparent hover:bg-white/5 text-white font-sans text-xs font-bold uppercase tracking-widest py-4.5 px-8 transition-all duration-300 text-center inline-flex items-center justify-center space-x-2 hover:-translate-y-0.5"
+              className="group w-full md:w-auto border border-white/18 bg-white/6 backdrop-blur-[8px] hover:bg-white/12 text-white font-sans text-xs font-bold uppercase tracking-widest py-4.5 px-8 transition-all duration-200 text-center inline-flex items-center justify-center space-x-2 rounded-[16px] hover:-translate-y-[1px]"
             >
               <span>Explore Services</span>
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />

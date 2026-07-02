@@ -117,7 +117,7 @@ export default function Navbar() {
             <Link
               href="/#book-appointment"
               onClick={() => handleLinkClick('/#book-appointment')}
-              className="bg-white hover:bg-[#ECEFF1] text-[#050505] font-sans text-xs font-bold px-6 py-3 tracking-wider uppercase transition-all duration-300"
+              className="bg-white hover:bg-[#ECECEC] text-[#050505] font-sans text-xs font-bold px-6 py-3 tracking-wider uppercase transition-all duration-200 rounded-[14px] cursor-pointer"
             >
               Book Appointment
             </Link>
@@ -216,7 +216,7 @@ export default function Navbar() {
           <div className="border-t border-white/10 pt-6 space-y-4">
             <a
               href="tel:+919355522667"
-              className="flex items-center justify-center space-x-2 w-full border border-white/20 py-3 text-white font-sans text-sm font-semibold tracking-wide hover:bg-white/10 transition-colors duration-300"
+              className="flex items-center justify-center space-x-2 w-full border border-white/20 py-3 text-white font-sans text-sm font-semibold tracking-wide hover:bg-white/10 transition-colors duration-200 rounded-[14px]"
             >
               <Phone className="w-4 h-4" />
               <span>Call Studio</span>
@@ -224,7 +224,7 @@ export default function Navbar() {
             <Link
               href="/#book-appointment"
               onClick={() => handleLinkClick('/#book-appointment')}
-              className="flex items-center justify-center w-full bg-white py-3 text-[#050505] font-sans text-sm font-semibold tracking-wide hover:bg-[#ECEFF1] transition-colors duration-300"
+              className="flex items-center justify-center w-full bg-white py-3 text-[#050505] font-sans text-sm font-semibold tracking-wide hover:bg-[#ECEFF1] transition-colors duration-200 rounded-[14px]"
             >
               Book Appointment
             </Link>

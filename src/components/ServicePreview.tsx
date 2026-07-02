@@ -55,9 +55,9 @@ export default function ServicePreview() {
     <section className="bg-[#F5F1EA] text-[#141414] relative border-b border-black/8">
       {/* Dark-to-Neutral Transition Band */}
       <div 
-        className="absolute top-0 left-0 right-0 h-[100px] md:h-[150px] lg:h-[180px] pointer-events-none z-10"
+        className="absolute top-0 left-0 right-0 h-[75px] md:h-[110px] pointer-events-none z-10"
         style={{
-          background: "linear-gradient(180deg, rgba(5,5,5,0.95) 0%, rgba(24,20,17,0.75) 35%, rgba(72,58,45,0.25) 70%, #F5F1EA 100%)"
+          background: "linear-gradient(180deg, rgba(5, 5, 5, 0.82) 0%, rgba(5, 5, 5, 0.38) 35%, rgba(245, 241, 234, 0.82) 78%, #F5F1EA 100%)"
         }}
       />
 
@@ -121,7 +121,7 @@ export default function ServicePreview() {
         <div className="text-center mt-16">
           <Link
             href="/services"
-            className="inline-flex items-center justify-center bg-[#141414] hover:bg-[#C7A56A] text-white font-sans text-sm font-semibold px-8 py-4 tracking-wide transition-all duration-300 hover:-translate-y-0.5 shadow-md"
+            className="inline-flex items-center justify-center bg-[#141414] hover:bg-[#C7A56A] text-white font-sans text-sm font-semibold px-8 py-4 tracking-wide transition-all duration-200 hover:-translate-y-[1px] shadow-md rounded-[16px]"
           >
             View All Services
           </Link>

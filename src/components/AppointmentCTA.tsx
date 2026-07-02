@@ -60,14 +60,14 @@ export default function AppointmentCTA() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
             <button
               onClick={handleToggleForm}
-              className="w-full sm:w-auto bg-accent-slate hover:bg-accent-silver text-surface-white font-sans text-xs font-bold px-8 py-4 tracking-wider uppercase transition-colors duration-300 flex items-center justify-center space-x-2"
+              className="w-full sm:w-auto bg-white hover:bg-[#ECECEC] text-[#050505] font-sans text-xs font-bold px-8 py-4 tracking-wider uppercase transition-all duration-200 hover:-translate-y-[1px] flex items-center justify-center space-x-2 rounded-[16px] cursor-pointer"
             >
               <Calendar className="w-4 h-4" />
               <span>{showForm ? 'Close Form' : 'Book Appointment'}</span>
             </button>
             <Link
               href="/#contact"
-              className="w-full sm:w-auto border border-border-custom/40 hover:border-surface-white text-surface-white font-sans text-xs font-bold px-8 py-4 tracking-wider uppercase transition-all duration-300 flex items-center justify-center space-x-2"
+              className="w-full sm:w-auto border border-white/25 bg-transparent hover:bg-white/5 text-white font-sans text-xs font-bold px-8 py-4 tracking-wider uppercase transition-all duration-200 hover:-translate-y-[1px] flex items-center justify-center space-x-2 rounded-[16px]"
             >
               <Phone className="w-4 h-4" />
               <span>Contact Us</span>

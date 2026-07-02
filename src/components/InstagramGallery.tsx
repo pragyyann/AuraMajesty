@@ -41,7 +41,7 @@ export default function InstagramGallery() {
               href="https://instagram.com/auramajestystudio"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center space-x-2 bg-[#141414] hover:bg-[#C7A56A] text-white font-sans text-xs font-bold px-6 py-3.5 tracking-wider uppercase transition-colors"
+              className="inline-flex items-center space-x-2 bg-[#141414] hover:bg-[#C7A56A] text-white font-sans text-xs font-bold px-6 py-3.5 tracking-wider uppercase transition-all duration-200 rounded-[14px]"
             >
               <svg
                 className="w-4 h-4 fill-none stroke-current"
